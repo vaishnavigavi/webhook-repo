@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Events Monitor</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f6f8fa;
+        }
+        .event-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
+        .event {
+            padding: 15px;
+            border-bottom: 1px solid #e1e4e8;
+            margin-bottom: 10px;
+        }
+        .event:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .timestamp {
+            color: #586069;
+            font-size: 0.9em;
+        }
+        .author {
+            font-weight: 600;
+            color: #0366d6;
+        }
+        .branch {
+            background-color: #e1ecf4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        h1 {
+            color: #24292e;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>GitHub Events Monitor</h1>
+    <div class="event-container" id="events"></div>
+
+    <script>
+        function formatEvent(event) {
+            const timestamp = new Date(event.timestamp).toLocaleString();
+            let message = '';
+            
+            switch(event.action) {
+                case 'PUSH':
+                    message = `${event.author} pushed to ${event.to_branch} on ${timestamp}`;
+                    break;
+                case 'PULL_REQUEST':
+                    message = `${event.author} submitted a pull request from ${event.from_branch} to ${event.to_branch} on ${timestamp}`;
+                    break;
+                case 'MERGE':
+                    message = `${event.author} merged branch ${event.from_branch} to ${event.to_branch} on ${timestamp}`;
+                    break;
+            }
+            
+            return `<div class="event">${message}</div>`;
+        }
+
+        function updateEvents() {
+            fetch('/events')
+                .then(response => response.json())
+                .then(events => {
+                    const eventsContainer = document.getElementById('events');
+                    eventsContainer.innerHTML = events.map(formatEvent).join('');
+                })
+                .catch(error => console.error('Error fetching events:', error));
+        }
+
+        // Initial load
+        updateEvents();
+
+        // Poll every 15 seconds
+        setInterval(updateEvents, 15000);
+    </script>
+</body>
+</html> 
