@@ -4,84 +4,586 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GitHub Events Monitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #0366d6;
+            --push-color: #0288d1;
+            --pr-color: #f57c00;
+            --merge-color: #2e7d32;
+            --bg-color: #f6f8fa;
+            --text-color: #24292e;
+            --border-color: #e1e4e8;
+            --card-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            --hover-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            max-width: 800px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f6f8fa;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
         }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .header:hover {
+            box-shadow: var(--hover-shadow);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1::before {
+            content: "📊";
+            font-size: 28px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px;
+            padding-left: 40px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 16px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-btn:hover {
+            background: var(--bg-color);
+            transform: translateY(-1px);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary-color);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .event-container {
             background-color: white;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            box-shadow: var(--card-shadow);
         }
+
         .event {
             padding: 15px;
-            border-bottom: 1px solid #e1e4e8;
+            border-bottom: 1px solid var(--border-color);
             margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            position: relative;
         }
+
         .event:last-child {
             border-bottom: none;
             margin-bottom: 0;
         }
-        .timestamp {
-            color: #586069;
-            font-size: 0.9em;
+
+        .event:hover {
+            background-color: var(--bg-color);
+            transform: translateX(5px);
         }
+
+        .badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 120px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .badge-push {
+            background-color: #e1f5fe;
+            color: var(--push-color);
+        }
+
+        .badge-pr {
+            background-color: #fff3e0;
+            color: var(--pr-color);
+        }
+
+        .badge-merge {
+            background-color: #e8f5e9;
+            color: var(--merge-color);
+        }
+
+        .event-details {
+            flex-grow: 1;
+        }
+
+        .event-message {
+            font-size: 15px;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .timestamp {
+            color: #666;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .timestamp::before {
+            content: "🕒";
+            font-size: 12px;
+        }
+
         .author {
             font-weight: 600;
-            color: #0366d6;
+            color: var(--primary-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
+
+        .author::before {
+            content: "👤";
+            font-size: 14px;
+        }
+
         .branch {
             background-color: #e1ecf4;
-            padding: 2px 6px;
-            border-radius: 3px;
+            padding: 3px 10px;
+            border-radius: 4px;
             font-family: monospace;
-            font-size: 0.9em;
+            font-size: 13px;
+            color: #0366d6;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
-        h1 {
-            color: #24292e;
-            margin-bottom: 30px;
+
+        .branch::before {
+            content: "🌿";
+            font-size: 12px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .refresh-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+            background: var(--bg-color);
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .no-events {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .no-events::before {
+            content: "📭";
+            font-size: 48px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .filter-buttons {
+                overflow-x: auto;
+                padding-bottom: 10px;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .event {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .badge {
+                min-width: 100px;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #0d1117;
+                --text-color: #c9d1d9;
+                --border-color: #30363d;
+            }
+
+            body {
+                background-color: var(--bg-color);
+                color: var(--text-color);
+            }
+
+            .header, .controls, .stat-card, .event-container {
+                background: #161b22;
+            }
+
+            .search-box input, .filter-btn {
+                background: #161b22;
+                color: var(--text-color);
+                border-color: var(--border-color);
+            }
+
+            .event:hover {
+                background-color: #1c2128;
+            }
+
+            .badge-push {
+                background-color: rgba(2, 136, 209, 0.2);
+            }
+
+            .badge-pr {
+                background-color: rgba(245, 124, 0, 0.2);
+            }
+
+            .badge-merge {
+                background-color: rgba(46, 125, 50, 0.2);
+            }
+
+            .branch {
+                background-color: rgba(3, 102, 214, 0.2);
+            }
         }
     </style>
 </head>
 <body>
-    <h1>GitHub Events Monitor</h1>
-    <div class="event-container" id="events"></div>
+    <div class="header">
+        <h1>GitHub Events Monitor</h1>
+        <div class="refresh-indicator">
+            <span id="last-updated">Last updated: Just now</span>
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-number" id="total-events">0</div>
+            <div class="stat-label">Total Events</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="push-count">0</div>
+            <div class="stat-label">Push Events</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="pr-count">0</div>
+            <div class="stat-label">Pull Requests</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="merge-count">0</div>
+            <div class="stat-label">Merges</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="search-box">
+            <input type="text" id="search" placeholder="Search by author or branch...">
+        </div>
+        <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all">All Events</button>
+            <button class="filter-btn" data-filter="PUSH">Push Events</button>
+            <button class="filter-btn" data-filter="PULL_REQUEST">Pull Requests</button>
+            <button class="filter-btn" data-filter="MERGE">Merges</button>
+        </div>
+    </div>
+
+    <div class="event-container" id="events">
+        <div class="loading">
+            <div class="spinner"></div>
+            Loading events...
+        </div>
+    </div>
 
     <script>
+        let allEvents = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        function getBadgeClass(action) {
+            switch(action) {
+                case 'PUSH': return 'badge-push';
+                case 'PULL_REQUEST': return 'badge-pr';
+                case 'MERGE': return 'badge-merge';
+                default: return '';
+            }
+        }
+
         function formatEvent(event) {
             const timestamp = new Date(event.timestamp).toLocaleString();
             let message = '';
             
             switch(event.action) {
                 case 'PUSH':
-                    message = `${event.author} pushed to ${event.to_branch} on ${timestamp}`;
+                    message = `${event.author} pushed to ${event.to_branch}`;
                     break;
                 case 'PULL_REQUEST':
-                    message = `${event.author} submitted a pull request from ${event.from_branch} to ${event.to_branch} on ${timestamp}`;
+                    message = `${event.author} submitted a pull request from ${event.from_branch} to ${event.to_branch}`;
                     break;
                 case 'MERGE':
-                    message = `${event.author} merged branch ${event.from_branch} to ${event.to_branch} on ${timestamp}`;
+                    message = `${event.author} merged branch ${event.from_branch} to ${event.to_branch}`;
                     break;
             }
             
-            return `<div class="event">${message}</div>`;
+            return `
+                <div class="event" data-action="${event.action}">
+                    <span class="badge ${getBadgeClass(event.action)}">${event.action}</span>
+                    <div class="event-details">
+                        <div class="event-message">${message}</div>
+                        <div class="timestamp">${timestamp}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateStats(events) {
+            document.getElementById('total-events').textContent = events.length;
+            document.getElementById('push-count').textContent = events.filter(e => e.action === 'PUSH').length;
+            document.getElementById('pr-count').textContent = events.filter(e => e.action === 'PULL_REQUEST').length;
+            document.getElementById('merge-count').textContent = events.filter(e => e.action === 'MERGE').length;
+        }
+
+        function filterEvents(events) {
+            return events.filter(event => {
+                const matchesFilter = currentFilter === 'all' || event.action === currentFilter;
+                const matchesSearch = searchQuery === '' || 
+                    event.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    event.from_branch.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    event.to_branch.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesFilter && matchesSearch;
+            });
         }
 
         function updateEvents() {
+            const eventsContainer = document.getElementById('events');
+            eventsContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Loading events...</div>';
+
             fetch('/events')
                 .then(response => response.json())
                 .then(events => {
-                    const eventsContainer = document.getElementById('events');
-                    eventsContainer.innerHTML = events.map(formatEvent).join('');
+                    allEvents = events;
+                    updateStats(events);
+                    const filteredEvents = filterEvents(events);
+                    
+                    if (filteredEvents.length === 0) {
+                        eventsContainer.innerHTML = `
+                            <div class="no-events">
+                                No events found
+                                ${searchQuery ? 'for your search' : ''}
+                                ${currentFilter !== 'all' ? `in ${currentFilter}` : ''}
+                            </div>
+                        `;
+                    } else {
+                        eventsContainer.innerHTML = filteredEvents.map(formatEvent).join('');
+                    }
+                    updateLastUpdated();
                 })
-                .catch(error => console.error('Error fetching events:', error));
+                .catch(error => {
+                    console.error('Error fetching events:', error);
+                    eventsContainer.innerHTML = '<div class="loading">Error loading events</div>';
+                });
         }
+
+        function updateLastUpdated() {
+            const now = new Date().toLocaleTimeString();
+            document.getElementById('last-updated').textContent = `Last updated: ${now}`;
+        }
+
+        // Event Listeners
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                const filteredEvents = filterEvents(allEvents);
+                document.getElementById('events').innerHTML = filteredEvents.map(formatEvent).join('');
+            });
+        });
+
+        document.getElementById('search').addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            const filteredEvents = filterEvents(allEvents);
+            document.getElementById('events').innerHTML = filteredEvents.map(formatEvent).join('');
+        });
 
         // Initial load
         updateEvents();
