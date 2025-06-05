@@ -1,217 +1,150 @@
-# GitHub Events Monitor
+# GitHub Webhook Events Monitor
 
-A real-time GitHub events monitoring system that captures and displays push, pull request, and merge events from your repositories.
+A real-time dashboard that monitors GitHub events (push, pull requests, and merges) using webhooks and displays them in a beautiful dark mode UI.
 
-## Project Overview
-
-This project consists of two main components:
-
-1. **Webhook Server** (`webhook-repo`): A Flask application that receives GitHub webhooks and stores events in MongoDB
-2. **GitHub Repository** (`action-repo`): A repository with GitHub Actions workflow that sends events to the webhook server
+![GitHub Webhook Events Monitor Dashboard](images/dashboard.png)
 
 ## Features
 
-- 🔄 Real-time event monitoring
-- 📊 Beautiful, responsive UI
-- 🔍 Search and filter events
-- 📈 Event statistics dashboard
-- 🌙 Dark mode support
-- ⚡ 15-second auto-refresh
-- 🔒 Secure webhook handling
+- 🎯 Real-time event monitoring
+- 🌙 Modern dark mode UI
+- 📊 Event statistics dashboard
+- 🔍 Search and filter capabilities
+- 📱 Responsive design
+- 🔄 Auto-refresh every 15 seconds
+- 🎨 Beautiful animations and transitions
 
-## System Architecture
+## Prerequisites
 
-```
-GitHub Repository (action-repo)
-         ↓
-GitHub Actions Workflow
-         ↓
-Webhook Server (webhook-repo)
-         ↓
-MongoDB Database
-         ↓
-Web UI (Auto-refreshing)
-```
-
-## Components
-
-### 1. Webhook Server (webhook-repo)
-
-#### Technologies Used
-- Flask (Python web framework)
-- MongoDB (Database)
-- Flask-CORS (Cross-Origin Resource Sharing)
-- Python-dotenv (Environment variables)
-
-#### Key Files
-- `app.py`: Main Flask application
-- `templates/index.html`: Web UI
-- `.env`: Environment configuration
-- `requirements.txt`: Python dependencies
-
-#### API Endpoints
-- `GET /`: Serves the web UI
-- `POST /webhook`: Receives GitHub webhook events
-- `GET /events`: Returns all stored events
-
-### 2. GitHub Repository (action-repo)
-
-#### Components
-- GitHub Actions workflow
-- Sample files for testing
-- Webhook configuration
-
-#### Workflow Features
-- Triggers on push, pull request, and merge events
-- Sends event data to webhook server
-- Uses GitHub Secrets for secure configuration
+- Python 3.8+
+- MongoDB
+- GitHub account
+- ngrok (for local development)
 
 ## Setup Instructions
 
-### 1. Webhook Server Setup
+### 1. Clone the Repositories
 
 ```bash
-# Clone the repository
-git clone <webhook-repo-url>
+# Clone the webhook server repository
+git clone https://github.com/yourusername/webhook-repo.git
 cd webhook-repo
 
-# Create virtual environment
+# Clone the action repository
+git clone https://github.com/yourusername/action-repo.git
+cd action-repo
+```
+
+### 2. Set Up the Webhook Server
+
+```bash
+# Navigate to webhook-repo
+cd webhook-repo
+
+# Create and activate virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your MongoDB URI
+# Start MongoDB (if not running)
+mongod
 
-# Run the server
+# Start the Flask server
 python app.py
 ```
 
-### 2. GitHub Repository Setup
+### 3. Set Up ngrok for Local Development
 
-1. Create a new repository on GitHub
-2. Add the following secrets in repository settings:
-   - `WEBHOOK_URL`: Your webhook server URL (e.g., ngrok URL + /webhook)
-3. Push the workflow file to `.github/workflows/webhook.yml`
+```bash
+# Install ngrok
+brew install ngrok  # On macOS
+# or download from https://ngrok.com/download
 
-### 3. Testing the Integration
+# Start ngrok tunnel
+ngrok http 5050
+```
 
-1. Start the webhook server
-2. Start ngrok to expose your local server:
+### 4. Configure GitHub Repository
+
+1. Go to your `action-repo` repository settings
+2. Navigate to Secrets and Variables > Actions
+3. Add the following secrets:
+   - `WEBHOOK_URL`: Your ngrok URL + `/webhook` (e.g., `https://xxxx-xx-xx-xxx-xx.ngrok-free.app/webhook`)
+
+### 5. Configure GitHub Actions
+
+The workflow is already configured in `.github/workflows/webhook.yml`. It will:
+- Trigger on push events
+- Send webhook data to your Flask server
+- Store events in MongoDB
+- Display them in the UI
+
+## Usage
+
+1. Start the Flask server:
    ```bash
-   ngrok http 5050
+   cd webhook-repo
+   source venv/bin/activate
+   python app.py
    ```
-3. Update the `WEBHOOK_URL` secret with the new ngrok URL
-4. Make changes to the repository to trigger events
+
+2. Access the dashboard:
+   - Open `http://localhost:5050` in your browser
+   - The UI will auto-refresh every 15 seconds
+
+3. Make changes to trigger events:
+   - Push to any branch
+   - Create a pull request
+   - Merge a pull request
+
+4. View events in the dashboard:
+   - Total events count
+   - Push events
+   - Pull requests
+   - Merges
+   - Detailed event information
 
 ## UI Features
 
-### 1. Event Display
-- Shows author, action type, branches, and timestamp
-- Color-coded badges for different event types
-- Hover effects and animations
+### Dashboard
+- Real-time statistics
+- Event type distribution
+- Total event count
 
-### 2. Search and Filter
-- Search by author or branch name
-- Filter by event type (Push, PR, Merge)
-- Real-time filtering
+### Event List
+- Chronological order
+- Event type badges
+- Author information
+- Branch details
+- Timestamps
 
-### 3. Statistics Dashboard
-- Total events count
-- Push events count
-- Pull request count
-- Merge count
+### Search & Filter
+- Search by author or branch
+- Filter by event type
+- Instant results
 
-### 4. Auto-refresh
-- Updates every 15 seconds
-- Shows last update time
-- Loading indicators
-
-## Event Types
-
-### 1. Push Events
-- Triggered when code is pushed to any branch
-- Shows author and target branch
-
-### 2. Pull Request Events
-- Triggered when a PR is created
-- Shows author, source branch, and target branch
-
-### 3. Merge Events
-- Triggered when a PR is merged
-- Shows author and merged branches
-
-## Security Features
-
-1. **GitHub Secrets**
-   - Secure storage of webhook URL
-   - Environment-specific configuration
-
-2. **CORS Configuration**
-   - Properly configured for webhook endpoints
-   - Secure cross-origin requests
-
-3. **Environment Variables**
-   - Sensitive data stored in .env file
-   - Not committed to repository
-
-## Development
-
-### Local Development
-1. Run Flask in debug mode
-2. Use ngrok for webhook testing
-3. Monitor MongoDB for data storage
-
-### Testing
-1. Make changes to action-repo
-2. Watch events appear in UI
-3. Verify statistics update
-4. Test search and filters
+### Mobile Responsive
+- Works on all devices
+- Optimized layout
+- Touch-friendly interface
 
 ## Troubleshooting
 
-### Common Issues
-1. **Webhook Not Receiving Events**
-   - Check ngrok URL is correct
-   - Verify GitHub secret is updated
-   - Check Flask server is running
+1. **Webhook not receiving events**
+   - Check ngrok is running
+   - Verify WEBHOOK_URL secret
+   - Check GitHub Actions workflow
 
-2. **UI Not Updating**
-   - Check browser console for errors
+2. **Events not showing in UI**
    - Verify MongoDB connection
-   - Check network requests
+   - Check Flask server logs
+   - Ensure correct ngrok URL
 
-3. **MongoDB Connection Issues**
-   - Verify MongoDB is running
-   - Check connection string in .env
-   - Check network connectivity
+3. **UI not updating**
+   - Check browser console
+   - Verify auto-refresh interval
+   - Try manual refresh
 
-## Future Improvements
-
-1. **Authentication**
-   - Add user authentication
-   - Secure API endpoints
-
-2. **Additional Features**
-   - Event notifications
-   - Custom webhook endpoints
-   - More event types
-
-3. **Performance**
-   - Pagination for large datasets
-   - Caching for better performance
-   - WebSocket for real-time updates
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## License
-
-MIT License - feel free to use this project for your own purposes! 
+THANKYOU!
