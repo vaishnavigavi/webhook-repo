@@ -3,6 +3,7 @@
 A real-time dashboard that monitors GitHub events (push, pull requests, and merges) using webhooks and displays them in a beautiful dark mode UI.
 
 ![GitHub Webhook Events Monitor Dashboard](images/dashboard.png)
+![GitHub Webhook Events Monitor Dashboard](images/dashboard1.png)
 
 ## Features
 
