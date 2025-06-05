@@ -3,76 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Events Monitor</title>
+    <title>GitHub Webhook Events</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #0366d6;
-            --push-color: #0288d1;
-            --pr-color: #f57c00;
-            --merge-color: #2e7d32;
-            --bg-color: #f6f8fa;
-            --text-color: #24292e;
-            --border-color: #e1e4e8;
-            --card-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            --hover-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #475569;
         }
 
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
             line-height: 1.5;
         }
 
         .header {
+            background: var(--bg-secondary);
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: var(--card-shadow);
-            transition: box-shadow 0.3s ease;
-        }
-
-        .header:hover {
-            box-shadow: var(--hover-shadow);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .header h1 {
-            font-size: 24px;
+            font-size: 1.5rem;
             font-weight: 600;
-            color: var(--text-color);
+            color: var(--text-primary);
+        }
+
+        .refresh-button {
+            background: var(--primary);
+            color: var(--text-primary);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
         }
 
-        .header h1::before {
-            content: "📊";
-            font-size: 28px;
+        .refresh-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
         }
 
-        .controls {
+        .refresh-button i {
+            font-size: 0.875rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.2);
+        }
+
+        .stat-card h3 {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
             display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .filters {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
             flex-wrap: wrap;
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: var(--card-shadow);
+            align-items: center;
+            border: 1px solid var(--border-color);
         }
 
         .search-box {
@@ -83,433 +140,271 @@
 
         .search-box input {
             width: 100%;
-            padding: 12px 15px;
-            padding-left: 40px;
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 14px;
-            background: white;
-            transition: all 0.3s ease;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
         }
 
         .search-box input:focus {
             outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
 
-        .search-box::before {
-            content: "🔍";
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-box i {
             position: absolute;
-            left: 12px;
+            left: 0.75rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #666;
-            font-size: 16px;
+            color: var(--text-muted);
         }
 
         .filter-buttons {
             display: flex;
-            gap: 10px;
+            gap: 0.5rem;
+            flex-wrap: wrap;
         }
 
-        .filter-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            background: white;
-            color: var(--text-color);
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
+        .filter-button {
+            padding: 0.5rem 1rem;
             border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
         }
 
-        .filter-btn:hover {
-            background: var(--bg-color);
-            transform: translateY(-1px);
+        .filter-button:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary);
         }
 
-        .filter-btn.active {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--hover-shadow);
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: var(--primary-color);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .stat-card:hover::before {
-            opacity: 1;
-        }
-
-        .stat-number {
-            font-size: 32px;
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .filter-button.active {
+            background: var(--primary);
+            color: var(--text-primary);
+            border-color: var(--primary);
         }
 
         .event-container {
-            background-color: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: var(--card-shadow);
+            background: var(--bg-secondary);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-height: 200px;
+            border: 1px solid var(--border-color);
         }
 
         .event {
-            padding: 15px;
+            padding: 1.5rem;
             border-bottom: 1px solid var(--border-color);
-            margin-bottom: 10px;
             display: flex;
-            align-items: center;
-            gap: 15px;
-            transition: all 0.3s ease;
-            position: relative;
+            gap: 1rem;
+            align-items: flex-start;
+            animation: fadeIn 0.3s ease-out;
+            transition: background-color 0.2s;
+        }
+
+        .event:hover {
+            background: var(--bg-tertiary);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .event:last-child {
             border-bottom: none;
-            margin-bottom: 0;
         }
 
-        .event:hover {
-            background-color: var(--bg-color);
-            transform: translateX(5px);
+        .event-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
-        .badge {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            min-width: 120px;
-            text-align: center;
-            transition: all 0.3s ease;
+        .event-icon.push { background: var(--primary); }
+        .event-icon.pull { background: var(--warning); }
+        .event-icon.merge { background: var(--success); }
+
+        .event-icon i {
+            color: var(--text-primary);
+            font-size: 1rem;
         }
 
-        .badge-push {
-            background-color: #e1f5fe;
-            color: var(--push-color);
+        .event-content {
+            flex: 1;
         }
 
-        .badge-pr {
-            background-color: #fff3e0;
-            color: var(--pr-color);
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
         }
 
-        .badge-merge {
-            background-color: #e8f5e9;
-            color: var(--merge-color);
+        .event-title {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .event-time {
+            color: var(--text-muted);
+            font-size: 0.875rem;
         }
 
         .event-details {
-            flex-grow: 1;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
         }
 
         .event-message {
-            font-size: 15px;
-            margin-bottom: 5px;
-            line-height: 1.4;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            background: var(--bg-tertiary);
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            margin-top: 0.5rem;
         }
 
-        .timestamp {
-            color: #666;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .timestamp::before {
-            content: "🕒";
-            font-size: 12px;
-        }
-
-        .author {
-            font-weight: 600;
-            color: var(--primary-color);
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .author::before {
-            content: "👤";
-            font-size: 14px;
-        }
-
-        .branch {
-            background-color: #e1ecf4;
-            padding: 3px 10px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 13px;
-            color: #0366d6;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .branch::before {
-            content: "🌿";
-            font-size: 12px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .refresh-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            color: #666;
-            background: var(--bg-color);
-            padding: 8px 15px;
-            border-radius: 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .spinner {
+        .badge {
             display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: 0.5rem;
         }
 
-        .no-events {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-            font-size: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
+        .badge.push { background: var(--primary); color: var(--text-primary); }
+        .badge.pull { background: var(--warning); color: var(--text-primary); }
+        .badge.merge { background: var(--success); color: var(--text-primary); }
 
-        .no-events::before {
-            content: "📭";
-            font-size: 48px;
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
             }
 
-            .controls {
+            .header {
+                padding: 1rem;
+            }
+
+            .filters {
                 flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                width: 100%;
             }
 
             .filter-buttons {
-                overflow-x: auto;
-                padding-bottom: 10px;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            .stats {
-                grid-template-columns: 1fr;
+                width: 100%;
+                justify-content: space-between;
             }
 
             .event {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 10px;
             }
 
-            .badge {
-                min-width: 100px;
-            }
-        }
-
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #0d1117;
-                --text-color: #c9d1d9;
-                --border-color: #30363d;
-            }
-
-            body {
-                background-color: var(--bg-color);
-                color: var(--text-color);
-            }
-
-            .header, .controls, .stat-card, .event-container {
-                background: #161b22;
-            }
-
-            .search-box input, .filter-btn {
-                background: #161b22;
-                color: var(--text-color);
-                border-color: var(--border-color);
-            }
-
-            .event:hover {
-                background-color: #1c2128;
-            }
-
-            .badge-push {
-                background-color: rgba(2, 136, 209, 0.2);
-            }
-
-            .badge-pr {
-                background-color: rgba(245, 124, 0, 0.2);
-            }
-
-            .badge-merge {
-                background-color: rgba(46, 125, 50, 0.2);
-            }
-
-            .branch {
-                background-color: rgba(3, 102, 214, 0.2);
+            .event-icon {
+                margin-bottom: 0.5rem;
             }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>GitHub Events Monitor</h1>
-        <div class="refresh-indicator">
-            <span id="last-updated">Last updated: Just now</span>
-            <div class="spinner"></div>
-        </div>
+        <h1>GitHub Webhook Events</h1>
+        <button class="refresh-button" onclick="updateEvents()">
+            <i class="fas fa-sync-alt"></i>
+            Refresh
+        </button>
     </div>
 
-    <div class="stats">
-        <div class="stat-card">
-            <div class="stat-number" id="total-events">0</div>
-            <div class="stat-label">Total Events</div>
+    <div class="container">
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3><i class="fas fa-chart-line"></i> Total Events</h3>
+                <div class="value" id="total-events">0</div>
+            </div>
+            <div class="stat-card">
+                <h3><i class="fas fa-code-branch"></i> Push Events</h3>
+                <div class="value" id="push-events">0</div>
+            </div>
+            <div class="stat-card">
+                <h3><i class="fas fa-code-pull-request"></i> Pull Requests</h3>
+                <div class="value" id="pull-requests">0</div>
+            </div>
+            <div class="stat-card">
+                <h3><i class="fas fa-code-merge"></i> Merges</h3>
+                <div class="value" id="merges">0</div>
+            </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number" id="push-count">0</div>
-            <div class="stat-label">Push Events</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number" id="pr-count">0</div>
-            <div class="stat-label">Pull Requests</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number" id="merge-count">0</div>
-            <div class="stat-label">Merges</div>
-        </div>
-    </div>
 
-    <div class="controls">
-        <div class="search-box">
-            <input type="text" id="search" placeholder="Search by author or branch...">
+        <div class="filters">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search" placeholder="Search events..." oninput="filterEvents()">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-button active" onclick="filterEvents('all')">All</button>
+                <button class="filter-button" onclick="filterEvents('push')">Push</button>
+                <button class="filter-button" onclick="filterEvents('pull')">Pull Requests</button>
+                <button class="filter-button" onclick="filterEvents('merge')">Merges</button>
+            </div>
         </div>
-        <div class="filter-buttons">
-            <button class="filter-btn active" data-filter="all">All Events</button>
-            <button class="filter-btn" data-filter="PUSH">Push Events</button>
-            <button class="filter-btn" data-filter="PULL_REQUEST">Pull Requests</button>
-            <button class="filter-btn" data-filter="MERGE">Merges</button>
-        </div>
-    </div>
 
-    <div class="event-container" id="events">
-        <div class="loading">
-            <div class="spinner"></div>
-            Loading events...
+        <div class="event-container" id="events">
+            <!-- Events will be inserted here -->
         </div>
     </div>
 
     <script>
         let allEvents = [];
         let currentFilter = 'all';
-        let searchQuery = '';
-
-        function getBadgeClass(action) {
-            switch(action) {
-                case 'PUSH': return 'badge-push';
-                case 'PULL_REQUEST': return 'badge-pr';
-                case 'MERGE': return 'badge-merge';
-                default: return '';
-            }
-        }
 
         function formatEvent(event) {
-            const timestamp = new Date(event.timestamp).toLocaleString();
-            let message = '';
-            
-            switch(event.action) {
-                case 'PUSH':
-                    message = `${event.author} pushed to ${event.to_branch}`;
-                    break;
-                case 'PULL_REQUEST':
-                    message = `${event.author} submitted a pull request from ${event.from_branch} to ${event.to_branch}`;
-                    break;
-                case 'MERGE':
-                    message = `${event.author} merged branch ${event.from_branch} to ${event.to_branch}`;
-                    break;
-            }
+            const icon = event.action === 'PUSH' ? 'code-branch' :
+                        event.action === 'PULL_REQUEST' ? 'code-pull-request' : 'code-merge';
+            const iconClass = event.action === 'PUSH' ? 'push' :
+                            event.action === 'PULL_REQUEST' ? 'pull' : 'merge';
             
             return `
-                <div class="event" data-action="${event.action}">
-                    <span class="badge ${getBadgeClass(event.action)}">${event.action}</span>
-                    <div class="event-details">
-                        <div class="event-message">${message}</div>
-                        <div class="timestamp">${timestamp}</div>
+                <div class="event">
+                    <div class="event-icon ${iconClass}">
+                        <i class="fas fa-${icon}"></i>
+                    </div>
+                    <div class="event-content">
+                        <div class="event-header">
+                            <div class="event-title">
+                                ${event.action}
+                                <span class="badge ${iconClass}">${event.action}</span>
+                            </div>
+                            <div class="event-time">${event.timestamp}</div>
+                        </div>
+                        <div class="event-details">
+                            Author: ${event.author}
+                            ${event.from_branch ? `<br>From: ${event.from_branch}` : ''}
+                            ${event.to_branch ? `<br>To: ${event.to_branch}` : ''}
+                        </div>
+                        <div class="event-message">
+                            ${event.action} event by ${event.author}
+                        </div>
                     </div>
                 </div>
             `;
@@ -517,78 +412,56 @@
 
         function updateStats(events) {
             document.getElementById('total-events').textContent = events.length;
-            document.getElementById('push-count').textContent = events.filter(e => e.action === 'PUSH').length;
-            document.getElementById('pr-count').textContent = events.filter(e => e.action === 'PULL_REQUEST').length;
-            document.getElementById('merge-count').textContent = events.filter(e => e.action === 'MERGE').length;
+            document.getElementById('push-events').textContent = 
+                events.filter(e => e.action === 'PUSH').length;
+            document.getElementById('pull-requests').textContent = 
+                events.filter(e => e.action === 'PULL_REQUEST').length;
+            document.getElementById('merges').textContent = 
+                events.filter(e => e.action === 'MERGE').length;
         }
 
-        function filterEvents(events) {
-            return events.filter(event => {
-                const matchesFilter = currentFilter === 'all' || event.action === currentFilter;
-                const matchesSearch = searchQuery === '' || 
-                    event.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    event.from_branch.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    event.to_branch.toLowerCase().includes(searchQuery.toLowerCase());
+        function filterEvents(filter = currentFilter) {
+            currentFilter = filter;
+            const searchQuery = document.getElementById('search').value.toLowerCase();
+            
+            // Update active filter button
+            document.querySelectorAll('.filter-button').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(filter));
+            });
+
+            const filteredEvents = allEvents.filter(event => {
+                const matchesFilter = filter === 'all' || 
+                    (filter === 'push' && event.action === 'PUSH') ||
+                    (filter === 'pull' && event.action === 'PULL_REQUEST') ||
+                    (filter === 'merge' && event.action === 'MERGE');
+                
+                const matchesSearch = !searchQuery || 
+                    event.author.toLowerCase().includes(searchQuery) ||
+                    event.from_branch?.toLowerCase().includes(searchQuery) ||
+                    event.to_branch?.toLowerCase().includes(searchQuery);
+
                 return matchesFilter && matchesSearch;
             });
-        }
 
-        function updateEvents() {
-            const eventsContainer = document.getElementById('events');
-            eventsContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Loading events...</div>';
-
-            fetch('/events')
-                .then(response => response.json())
-                .then(events => {
-                    allEvents = events;
-                    updateStats(events);
-                    const filteredEvents = filterEvents(events);
-                    
-                    if (filteredEvents.length === 0) {
-                        eventsContainer.innerHTML = `
-                            <div class="no-events">
-                                No events found
-                                ${searchQuery ? 'for your search' : ''}
-                                ${currentFilter !== 'all' ? `in ${currentFilter}` : ''}
-                            </div>
-                        `;
-                    } else {
-                        eventsContainer.innerHTML = filteredEvents.map(formatEvent).join('');
-                    }
-                    updateLastUpdated();
-                })
-                .catch(error => {
-                    console.error('Error fetching events:', error);
-                    eventsContainer.innerHTML = '<div class="loading">Error loading events</div>';
-                });
-        }
-
-        function updateLastUpdated() {
-            const now = new Date().toLocaleTimeString();
-            document.getElementById('last-updated').textContent = `Last updated: ${now}`;
-        }
-
-        // Event Listeners
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentFilter = btn.dataset.filter;
-                const filteredEvents = filterEvents(allEvents);
-                document.getElementById('events').innerHTML = filteredEvents.map(formatEvent).join('');
-            });
-        });
-
-        document.getElementById('search').addEventListener('input', (e) => {
-            searchQuery = e.target.value;
-            const filteredEvents = filterEvents(allEvents);
             document.getElementById('events').innerHTML = filteredEvents.map(formatEvent).join('');
-        });
+            updateStats(filteredEvents);
+        }
+
+        async function updateEvents() {
+            try {
+                const response = await fetch('http://localhost:5050/events');
+                const events = await response.json();
+                allEvents = events;
+                filterEvents();
+            } catch (error) {
+                console.error('Error fetching events:', error);
+            }
+        }
 
         // Initial load
         updateEvents();
 
-        // Poll every 15 seconds
+        // Auto-refresh every 15 seconds
         setInterval(updateEvents, 15000);
     </script>
 </body>
